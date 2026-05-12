@@ -56,7 +56,12 @@ void setup() {
         Serial.println("TCS34725 Error");
         while (1);
     }
-    lcd.print("SYSTEM READY");
+
+    // Initial LCD Dashboard
+    lcd.setCursor(0, 0); lcd.print("SYS: OPERATIONAL");
+    lcd.setCursor(0, 1); lcd.print("SCAN: READY     ");
+    lcd.setCursor(0, 2); lcd.print("R:0   G:0   B:0 ");
+    lcd.setCursor(0, 3); lcd.print("TOTAL COUNT: 0  ");
 }
 
 void loop() {
@@ -145,13 +150,18 @@ void runBinStateMachine(Bin &b) {
 }
 
 void updateLCD(BoxColor last) {
-    lcd.setCursor(0, 0); lcd.print("SYS: OPERATIONAL");
-    lcd.setCursor(0, 1); lcd.print("SCAN: ");
-    lcd.print(last == RED ? "RED  " : last == GREEN ? "GREEN" : last == YELLOW ? "YELLW" : "BLUE ");
-    lcd.setCursor(0, 2);
-    lcd.print("R:"); lcd.print(totals[0]);
-    lcd.print(" G:"); lcd.print(totals[1]);
-    lcd.print(" B:"); lcd.print(totals[2]);
-    lcd.setCursor(0, 3);
-    lcd.print("TOTAL COUNT: "); lcd.print(totals[0] + totals[1] + totals[2]);
+    // Only update dynamic fields to reduce I2C traffic
+    // Row 1: Scan result (Clear "READY" on first update)
+    lcd.setCursor(6, 1);
+    lcd.print(last == RED ? "RED      " : last == GREEN ? "GREEN    " : last == YELLOW ? "YELLW    " : "BLUE     ");
+
+    // Row 2: Bins (Padding clears old digits)
+    lcd.setCursor(2, 2);  lcd.print(totals[0]); lcd.print("  ");
+    lcd.setCursor(8, 2);  lcd.print(totals[1]); lcd.print("  ");
+    lcd.setCursor(14, 2); lcd.print(totals[2]);
+
+    // Row 3: Total
+    lcd.setCursor(13, 3);
+    lcd.print(totals[0] + totals[1] + totals[2]);
+    lcd.print("  ");
 }
